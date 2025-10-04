@@ -47,13 +47,13 @@ def get_nikkei_data():
             return None, None
         
         # 最新の終値と前日の終値を取得
-        latest_close = df['Close'].iloc[-1]
+        latest_close = df["Close"].iloc[-1].item()
         # 営業日ベースで前日の終値を探す
         if len(df) < 2:
             logging.warning("比較できる前日データがありません。")
             return None, None
         
-        previous_close = df['Close'].iloc[-2]
+        previous_close = df["Close"].iloc[-2].item()
         
         return latest_close, previous_close
     except Exception as e:
