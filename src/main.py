@@ -19,7 +19,7 @@ X_ACCESS_TOKEN_SECRET = os.getenv('X_ACCESS_TOKEN_SECRET')
 # Gemini APIの設定
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    model = genai.GenerativeModel('gemini-2.5-pro') # gemini-2.5-pro # gemini-2.5-flash-lite
 else:
     logging.error("GEMINI_API_KEYが設定されていません。")
     exit(1)
