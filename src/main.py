@@ -26,9 +26,14 @@ else:
 
 # X APIの設定
 if X_API_KEY and X_API_KEY_SECRET and X_ACCESS_TOKEN and X_ACCESS_TOKEN_SECRET:
+    # API v1.1 の認証
     auth = tweepy.OAuthHandler(X_API_KEY, X_API_KEY_SECRET)
     auth.set_access_token(X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET)
-    api = tweepy.API(auth)
+    api_v1 = tweepy.API(auth)
+    # API v2 のクライアントは使用しないため、コメントアウトまたは削除
+    # client_v2 = tweepy.Client(consumer_key=X_API_KEY, consumer_secret=X_API_KEY_SECRET,
+    #                         access_token=X_ACCESS_TOKEN, access_token_secret=X_ACCESS_TOKEN_SECRET)
+
 else:
     logging.error("X APIの認証情報が設定されていません。")
     exit(1)
@@ -90,7 +95,8 @@ def generate_tweet_text(current_price, change_amount, change_percent, direction)
 def post_tweet(text):
     """X (旧Twitter) にツイートを投稿する"""
     try:
-        api.update_status(text)
+        api_v1.update_status(text)
+
         logging.info(f"ツイートを投稿しました: {text}")
         return True
     except tweepy.TweepyException as e:
