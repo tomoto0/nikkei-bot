@@ -5,38 +5,84 @@ import tweepy
 import google.generativeai as genai
 from datetime import datetime, timedelta
 import logging
+from typing import Optional
 
 # ロギング設定
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format=\'%(asctime)s - %(levelname)s - %(message)s\')
 
 # 環境変数からAPIキーを取得
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-X_API_KEY = os.getenv('X_API_KEY')
-X_API_KEY_SECRET = os.getenv('X_API_KEY_SECRET')
-X_ACCESS_TOKEN = os.getenv('X_ACCESS_TOKEN')
-X_ACCESS_TOKEN_SECRET = os.getenv('X_ACCESS_TOKEN_SECRET')
+GEMINI_API_KEY = os.getenv(\'GEMINI_API_KEY\')
+X_API_KEY = os.getenv(\'X_API_KEY\')
+X_API_KEY_SECRET = os.getenv(\'X_API_KEY_SECRET\')
+X_ACCESS_TOKEN = os.getenv(\'X_ACCESS_TOKEN\')
+X_ACCESS_TOKEN_SECRET = os.getenv(\'X_ACCESS_TOKEN_SECRET\')
+
+class TwitterClient:
+    """X (Twitter) APIを使用してツイートを投稿するクラス"""
+    
+    def __init__(self, api_key: str, api_secret: str, access_token: str, access_token_secret: str):
+        """Twitter APIクライアントを初期化"""
+        try:
+            self.client = tweepy.Client(
+                consumer_key=api_key,
+                consumer_secret=api_secret,
+                access_token=access_token,
+                access_token_secret=access_token_secret,
+                wait_on_rate_limit=True
+            )
+            # 認証テストはここでは行わない（main関数でエラーハンドリングするため）
+            
+        except Exception as e:
+            logging.error(f"Twitter API初期化エラー: {e}")
+            raise
+    
+    def post_tweet(self, text: str) -> Optional[str]:
+        """ツイートを投稿"""
+        try:
+            if len(text) > 280:
+                logging.warning(f"ツイートが長すぎます ({len(text)}文字): {text[:50]}...")
+                # 長すぎる場合は短縮して再試行するか、エラーを返すか検討
+                # 今回はエラーを返す
+                return None
+            
+            response = self.client.create_tweet(text=text)
+            
+            if response.data:
+                tweet_id = response.data[\'id\']
+                logging.info(f"ツイート投稿成功: https://twitter.com/i/status/{tweet_id}")
+                return tweet_id
+            else:
+                logging.error(f"ツイート投稿に失敗しました: {response.errors}")
+                return None
+                
+        except tweepy.TooManyRequests:
+            logging.error("レート制限に達しました。しばらく待ってから再試行してください。")
+            return None
+        except tweepy.Forbidden:
+            logging.error("ツイート投稿が禁止されています。APIキーとアクセス権限を確認してください。")
+            return None
+        except tweepy.Unauthorized:
+            logging.error("認証エラー。APIキーとトークンを確認してください。")
+            return None
+        except Exception as e:
+            logging.error(f"ツイート投稿エラー: {e}")
+            return None
 
 # Gemini APIの設定
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    gemini_model = genai.GenerativeModel(\'gemini-pro\')
 else:
     logging.error("GEMINI_API_KEYが設定されていません。")
     exit(1)
 
-# X APIの設定
-if X_API_KEY and X_API_KEY_SECRET and X_ACCESS_TOKEN and X_ACCESS_TOKEN_SECRET:
-    # API v1.1 の認証
-    auth = tweepy.OAuthHandler(X_API_KEY, X_API_KEY_SECRET)
-    auth.set_access_token(X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET)
-    api_v1 = tweepy.API(auth)
-    # API v2 のクライアントは使用しないため、コメントアウトまたは削除
-    # client_v2 = tweepy.Client(consumer_key=X_API_KEY, consumer_secret=X_API_KEY_SECRET,
-    #                         access_token=X_ACCESS_TOKEN, access_token_secret=X_ACCESS_TOKEN_SECRET)
-
-else:
-    logging.error("X APIの認証情報が設定されていません。")
+# TwitterClientの初期化
+try:
+    twitter_client = TwitterClient(X_API_KEY, X_API_KEY_SECRET, X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET)
+except Exception:
+    logging.error("TwitterClientの初期化に失敗しました。プログラムを終了します。")
     exit(1)
+
 
 def get_nikkei_data():
     """Yahoo Financeから日経平均株価データを取得する"""
@@ -94,14 +140,8 @@ def generate_tweet_text(current_price, change_amount, change_percent, direction)
 
 def post_tweet(text):
     """X (旧Twitter) にツイートを投稿する"""
-    try:
-        api_v1.update_status(text)
+    return twitter_client.post_tweet(text)
 
-        logging.info(f"ツイートを投稿しました: {text}")
-        return True
-    except tweepy.TweepyException as e:
-        logging.error(f"ツイートの投稿中にエラーが発生しました: {e}")
-        return False
 
 def main():
     logging.info("日経平均株価Botを開始します。")
