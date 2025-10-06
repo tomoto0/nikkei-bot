@@ -41,8 +41,7 @@ class TwitterClient:
         try:
             if len(text) > 280:
                 logging.warning(f"ツイートが長すぎます ({len(text)}文字): {text[:50]}...")
-                # 長すぎる場合は短縮して再試行するか、エラーを返すか検討
-                # 今回はエラーを返す
+                # 長すぎる場合はエラーを返す
                 return None
             
             response = self.client.create_tweet(text=text)
@@ -71,7 +70,7 @@ class TwitterClient:
 # Gemini APIの設定
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    gemini_model = genai.GenerativeModel(\'gemini-pro\')
+    gemini_model = genai.GenerativeModel(\'gemini-2.5-flash-lite\')
 else:
     logging.error("GEMINI_API_KEYが設定されていません。")
     exit(1)
@@ -86,7 +85,7 @@ except Exception:
 
 def get_nikkei_data():
     """Yahoo Financeから日経平均株価データを取得する"""
-    ticker = '^N225'
+    ticker = \'^N225\'
     # 過去2日間のデータを取得（前日終値と比較するため）
     end_date = datetime.now()
     start_date = end_date - timedelta(days=5) # 週末や祝日を考慮して少し長めに取得
@@ -128,11 +127,11 @@ def generate_tweet_text(current_price, change_amount, change_percent, direction)
     """
     
     try:
-        response = model.generate_content(prompt)
+        response = gemini_model.generate_content(prompt)
         tweet_text = response.text.strip()
         # 日付と時刻を追加
         now = datetime.now()
-        tweet_text += f" {now.strftime('%m月%d日 %H時%M分')}"
+        tweet_text += f" {now.strftime(\'%m月%d日 %H時%M分\')}"
         return tweet_text
     except Exception as e:
         logging.error(f"ツイートテキストの生成中にエラーが発生しました: {e}")
@@ -171,6 +170,6 @@ def main():
     else:
         logging.info(f"日経平均株価の変動は{THRESHOLD_PERCENT}%未満です。ツイートはしません。")
 
-if __name__ == '__main__':
+if __name__ == \'__main__\':
     main()
 
