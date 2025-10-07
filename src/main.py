@@ -131,8 +131,9 @@ def generate_tweet_text(current_price, change_amount, change_percent, direction)
         tweet_text = response.text.strip()
         # 日付と時刻を追加
         now = datetime.now()
-        tweet_text += f" {now.strftime('%m月%d日 %H時%M分')}"       return tweet_text
-    except Exception as e:
+        tweet_text += f" {now.strftime(\'%m月%d日 %H時%M分\')}"
+        return tweet_text
+    except Exception as e: # Corrected indentation and removed extra 't':
         logging.error(f"ツイートテキストの生成中にエラーが発生しました: {e}")
         return None
 
