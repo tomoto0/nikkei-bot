@@ -46,7 +46,7 @@ class TwitterClient:
             response = self.client.create_tweet(text=text)
             
             if response.data:
-                tweet_id = response.data['id']
+                tweet_id = response.data["id"]
                 logging.info(f"ツイート投稿成功: https://twitter.com/i/status/{tweet_id}")
                 return tweet_id
             else:
