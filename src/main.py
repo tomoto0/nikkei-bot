@@ -7,7 +7,7 @@ import logging
 from typing import Optional
 
 # ロギング設定
-logging.basicConfig(level=logging.INFO, format=r'%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(level=logging.INFO, format=r'''%(asctime)s - %(levelname)s - %(message)s''')
 
 # 環境変数からAPIキーを取得
 GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
