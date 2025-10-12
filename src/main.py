@@ -7,15 +7,14 @@ import logging
 from typing import Optional
 
 # ロギング設定
-LOG_FORMAT = '%(asctime)s - %(levelname)s - %(message)s'
-logging.basicConfig(level=logging.INFO, format=LOG_FORMAT)
+logging.basicConfig(level=logging.INFO, format=r"%(asctime)s - %(levelname)s - %(message)s")
 
 # 環境変数からAPIキーを取得
-GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-X_API_KEY = os.getenv('X_API_KEY')
-X_API_KEY_SECRET = os.getenv('X_API_KEY_SECRET')
-X_ACCESS_TOKEN = os.getenv('X_ACCESS_TOKEN')
-X_ACCESS_TOKEN_SECRET = os.getenv('X_ACCESS_TOKEN_SECRET')
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+X_API_KEY = os.getenv("X_API_KEY")
+X_API_KEY_SECRET = os.getenv("X_API_KEY_SECRET")
+X_ACCESS_TOKEN = os.getenv("X_ACCESS_TOKEN")
+X_ACCESS_TOKEN_SECRET = os.getenv("X_ACCESS_TOKEN_SECRET")
 
 class TwitterClient:
     """X (Twitter) APIを使用してツイートを投稿するクラス"""
@@ -70,7 +69,7 @@ class TwitterClient:
 # Gemini APIの設定
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)
-    gemini_model = genai.GenerativeModel('gemini-2.5-flash-lite')
+    gemini_model = genai.GenerativeModel("gemini-2.5-flash-lite")
 else:
     logging.error("GEMINI_API_KEYが設定されていません。")
     exit(1)
@@ -85,7 +84,7 @@ except Exception:
 
 def get_nikkei_data():
     """Yahoo Financeから日経平均株価データを取得する"""
-    ticker = '^N225'
+    ticker = "^N225"
     # 過去2日間のデータを取得（前日終値と比較するため）
     end_date = datetime.now()
     start_date = end_date - timedelta(days=5) # 週末や祝日を考慮して少し長めに取得
@@ -131,7 +130,7 @@ def generate_tweet_text(current_price, change_amount, change_percent, direction)
         tweet_text = response.text.strip()
         # 日付と時刻を追加
         now = datetime.now()
-        tweet_text += f" {now.strftime('%m月%d日 %H時%M分')}"
+        tweet_text += f" {now.strftime("%m月%d日 %H時%M分")}"
         return tweet_text
     except Exception as e:
         logging.error(f"ツイートテキストの生成中にエラーが発生しました: {e}")
@@ -170,5 +169,5 @@ def main():
     else:
         logging.info(f"日経平均株価の変動は{THRESHOLD_PERCENT}%未満です。ツイートはしません。")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
