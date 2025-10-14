@@ -10,8 +10,7 @@ from typing import Optional
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
+handler.setFormatter(logging.Formatter("%(asctime)s - %(levelname)s - %(message)s"))
 logger.addHandler(handler)
 
 # 環境変数からAPIキーを取得
@@ -117,17 +116,17 @@ def get_nikkei_data():
 def generate_tweet_text(current_price, change_amount, change_percent, direction):
     """Gemini APIを使用してツイートテキストを生成する"""
     prompt = f"""
-    日経平均株価の変動についてツイートを作成してください。
-    現在の価格: {current_price:.2f}円
-    変動額: {change_amount:.2f}円
-    変動率: {change_percent:.2f}%
-    変動方向: {direction}
-    
-    以下の要件を満たしてください:
-    - 簡潔にまとめる。
-    - 感情を示す絵文字を適切に使う。
-    - 関連するハッシュタグ（#日経平均 #株価変動 #投資）を含める。
-    - 例: 「日経平均株価が上昇しました📈 現在価格: 〇〇円 (前日比 +〇〇円, +〇〇%)。〇月〇日 〇時〇分 #日経平均 #株価変動 #投資」
+日経平均株価の変動についてツイートを作成してください。
+現在の価格: {current_price:.2f}円
+変動額: {change_amount:.2f}円
+変動率: {change_percent:.2f}%
+変動方向: {direction}
+
+以下の要件を満たしてください:
+- 簡潔にまとめる。
+- 感情を示す絵文字を適切に使う。
+- 関連するハッシュタグ（#日経平均 #株価変動 #投資）を含める。
+- 例: 「日経平均株価が上昇しました📈 現在価格: 〇〇円 (前日比 +〇〇円, +〇〇%)。〇月〇日 〇時〇分 #日経平均 #株価変動 #投資」
     """
     
     try:
@@ -135,7 +134,7 @@ def generate_tweet_text(current_price, change_amount, change_percent, direction)
         tweet_text = response.text.strip()
         # 日付と時刻を追加
         now = datetime.now()
-                tweet_text += f" {now.strftime('%m月%d日 %H時%M分')}"
+        tweet_text += f" {now.strftime("%m月%d日 %H時%M分")}"
         return tweet_text
     except Exception as e:
         logging.error(f"ツイートテキストの生成中にエラーが発生しました: {e}")
@@ -176,3 +175,8 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+
+# Trigger GitHub Actions workflow
+
