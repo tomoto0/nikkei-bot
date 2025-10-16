@@ -5,6 +5,7 @@ import google.generativeai as genai
 from datetime import datetime, timedelta
 import logging
 from typing import Optional
+import textwrap
 
 # ロギング設定
 logger = logging.getLogger()
@@ -33,7 +34,6 @@ class TwitterClient:
                 access_token_secret=access_token_secret,
                 wait_on_rate_limit=True
             )
-            # 認証テストはここでは行わない（main関数でエラーハンドリングするため）
             
         except Exception as e:
             logging.error(f"Twitter API初期化エラー: {e}")
@@ -44,7 +44,6 @@ class TwitterClient:
         try:
             if len(text) > 280:
                 logging.warning(f"ツイートが長すぎます ({len(text)}文字): {text[:50]}...")
-                # 長すぎる場合はエラーを返す
                 return None
             
             response = self.client.create_tweet(text=text)
@@ -89,9 +88,8 @@ except Exception:
 def get_nikkei_data():
     """Yahoo Financeから日経平均株価データを取得する"""
     ticker = "^N225"
-    # 過去2日間のデータを取得（前日終値と比較するため）
     end_date = datetime.now()
-    start_date = end_date - timedelta(days=5) # 週末や祝日を考慮して少し長めに取得
+    start_date = end_date - timedelta(days=5)
     
     try:
         df = yf.download(ticker, start=start_date, end=end_date)
@@ -99,9 +97,7 @@ def get_nikkei_data():
             logging.warning("日経平均株価データが取得できませんでした。")
             return None, None
         
-        # 最新の終値と前日の終値を取得
         latest_close = df["Close"].iloc[-1].item()
-        # 営業日ベースで前日の終値を探す
         if len(df) < 2:
             logging.warning("比較できる前日データがありません。")
             return None, None
@@ -115,24 +111,23 @@ def get_nikkei_data():
 
 def generate_tweet_text(current_price, change_amount, change_percent, direction):
     """Gemini APIを使用してツイートテキストを生成する"""
-    prompt = f"""
-日経平均株価の変動についてツイートを作成してください。
-現在の価格: {current_price:.2f}円
-変動額: {change_amount:.2f}円
-変動率: {change_percent:.2f}%
-変動方向: {direction}
+    prompt = textwrap.dedent(f"""
+        日経平均株価の変動についてツイートを作成してください。
+        現在の価格: {current_price:.2f}円
+        変動額: {change_amount:.2f}円
+        変動率: {change_percent:.2f}%
+        変動方向: {direction}
 
-以下の要件を満たしてください:
-- 簡潔にまとめる。
-- 感情を示す絵文字を適切に使う。
-- 関連するハッシュタグ（#日経平均 #株価変動 #投資）を含める。
-- 例: 「日経平均株価が上昇しました📈 現在価格: 〇〇円 (前日比 +〇〇円, +〇〇%)。〇月〇日 〇時〇分 #日経平均 #株価変動 #投資」
-    """
+        以下の要件を満たしてください:
+        - 簡潔にまとめる。
+        - 感情を示す絵文字を適切に使う。
+        - 関連するハッシュタグ（#日経平均 #株価変動 #投資）を含める。
+        - 例: 「日経平均株価が上昇しました📈 現在価格: 〇〇円 (前日比 +〇〇円, +〇〇%)。〇月〇日 〇時〇分 #日経平均 #株価変動 #投資」
+    """)
     
     try:
         response = gemini_model.generate_content(prompt)
         tweet_text = response.text.strip()
-        # 日付と時刻を追加
         now = datetime.now()
         tweet_text += f" {now.strftime("%m月%d日 %H時%M分")}"
         return tweet_text
@@ -158,7 +153,6 @@ def main():
     change_amount = current_price - previous_close
     change_percent = (change_amount / previous_close) * 100
 
-    # 変動率の閾値 (例: ±1%)
     THRESHOLD_PERCENT = 1.0
 
     if abs(change_percent) >= THRESHOLD_PERCENT:
@@ -175,8 +169,4 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-
-# Trigger GitHub Actions workflow
 
