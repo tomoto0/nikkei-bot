@@ -129,7 +129,8 @@ def generate_tweet_text(current_price, change_amount, change_percent, direction)
         response = gemini_model.generate_content(prompt)
         tweet_text = response.text.strip()
         now = datetime.now()
-        tweet_text += f" {now.strftime(\'%m月%d日 %H時%M分\')}"
+        date_time_str = now.strftime("%m月%d日 %H時%M分")
+        tweet_text += f" {date_time_str}"
         return tweet_text
     except Exception as e:
         logging.error(f"ツイートテキストの生成中にエラーが発生しました: {e}")
