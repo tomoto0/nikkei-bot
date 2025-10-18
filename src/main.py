@@ -23,7 +23,7 @@ X_ACCESS_TOKEN_SECRET = os.getenv("X_ACCESS_TOKEN_SECRET")
 
 class TwitterClient:
     """X (Twitter) APIを使用してツイートを投稿するクラス"""
-    
+
     def __init__(self, api_key: str, api_secret: str, access_token: str, access_token_secret: str):
         """Twitter APIクライアントを初期化"""
         try:
@@ -34,20 +34,20 @@ class TwitterClient:
                 access_token_secret=access_token_secret,
                 wait_on_rate_limit=True
             )
-            
+
         except Exception as e:
             logging.error(f"Twitter API初期化エラー: {e}")
             raise
-    
+
     def post_tweet(self, text: str) -> Optional[str]:
         """ツイートを投稿"""
         try:
             if len(text) > 280:
                 logging.warning(f"ツイートが長すぎます ({len(text)}文字): {text[:50]}...")
                 return None
-            
+
             response = self.client.create_tweet(text=text)
-            
+
             if response.data:
                 tweet_id = response.data["id"]
                 logging.info(f"ツイート投稿成功: https://twitter.com/i/status/{tweet_id}")
@@ -55,7 +55,7 @@ class TwitterClient:
             else:
                 logging.error(f"ツイート投稿に失敗しました: {response.errors}")
                 return None
-                
+
         except tweepy.TooManyRequests:
             logging.error("レート制限に達しました。しばらく待ってから再試行してください。")
             return None
@@ -90,20 +90,20 @@ def get_nikkei_data():
     ticker = "^N225"
     end_date = datetime.now()
     start_date = end_date - timedelta(days=5)
-    
+
     try:
         df = yf.download(ticker, start=start_date, end=end_date)
         if df.empty:
             logging.warning("日経平均株価データが取得できませんでした。")
             return None, None
-        
+
         latest_close = df["Close"].iloc[-1].item()
         if len(df) < 2:
             logging.warning("比較できる前日データがありません。")
             return None, None
-        
+
         previous_close = df["Close"].iloc[-2].item()
-        
+
         return latest_close, previous_close
     except Exception as e:
         logging.error(f"日経平均株価データの取得中にエラーが発生しました: {e}")
@@ -124,12 +124,12 @@ def generate_tweet_text(current_price, change_amount, change_percent, direction)
         - 関連するハッシュタグ（#日経平均 #株価変動 #投資）を含める。
         - 例: 「日経平均株価が上昇しました📈 現在価格: 〇〇円 (前日比 +〇〇円, +〇〇%)。〇月〇日 〇時〇分 #日経平均 #株価変動 #投資」
     """)
-    
+
     try:
         response = gemini_model.generate_content(prompt)
         tweet_text = response.text.strip()
         now = datetime.now()
-        tweet_text += f" {now.strftime('%m月%d日 %H時%M分')}"
+        tweet_text += f" {now.strftime(\'%m月%d日 %H時%M分\')}"
         return tweet_text
     except Exception as e:
         logging.error(f"ツイートテキストの生成中にエラーが発生しました: {e}")
@@ -158,7 +158,7 @@ def main():
     if abs(change_percent) >= THRESHOLD_PERCENT:
         direction = "上昇" if change_amount > 0 else "下落"
         logging.info(f"日経平均株価が{direction}しました。変動率: {change_percent:.2f}%")
-        
+
         tweet_text = generate_tweet_text(current_price, change_amount, change_percent, direction)
         if tweet_text:
             post_tweet(tweet_text)
