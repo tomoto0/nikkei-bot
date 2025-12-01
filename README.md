@@ -107,5 +107,5 @@ cd nikkei-bot
 
 ## 著者
 
-Manus AI
+Tomoto Masuda
 
