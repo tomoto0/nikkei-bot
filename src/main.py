@@ -152,7 +152,7 @@ def main():
     change_amount = current_price - previous_close
     change_percent = (change_amount / previous_close) * 100
 
-    THRESHOLD_PERCENT = 0.5
+    THRESHOLD_PERCENT = 0.3
 
     if abs(change_percent) >= THRESHOLD_PERCENT:
         direction = "上昇" if change_amount > 0 else "下落"
