@@ -1,5 +1,5 @@
 import os
-import yfinance as yf
+import pandas_datareader.data as web
 import tweepy
 import google.generativeai as genai
 from datetime import datetime, timedelta
@@ -86,25 +86,23 @@ except Exception:
 
 
 def get_nikkei_data():
-    """Yahoo Financeから日経平均株価データを取得する"""
-    ticker = "^N225"
-    end_date = datetime.now()
-    start_date = end_date - timedelta(days=5)
-
+    """Stooqから日経平均株価データを取得する"""
+    ticker = "^NKX"
     try:
-        df = yf.download(ticker, start=start_date, end=end_date)
+        df = web.DataReader(ticker, 'stooq')
         if df.empty:
             logging.warning("日経平均株価データが取得できませんでした。")
             return None, None
 
-        latest_close = df["Close"].iloc[-1].item()
+        # Stooqのデータは通常降順（最新が先頭）
+        latest_close = df["Close"].iloc[0]
         if len(df) < 2:
             logging.warning("比較できる前日データがありません。")
             return None, None
 
-        previous_close = df["Close"].iloc[-2].item()
+        previous_close = df["Close"].iloc[1]
 
-        return latest_close, previous_close
+        return float(latest_close), float(previous_close)
     except Exception as e:
         logging.error(f"日経平均株価データの取得中にエラーが発生しました: {e}")
         return None, None
